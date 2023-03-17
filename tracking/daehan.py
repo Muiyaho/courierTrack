@@ -1,15 +1,7 @@
 import re
 import requests
+from com.reg import patterns
 from bs4 import BeautifulSoup
-
-
-patterns = {
-    1: r"^\d{13}$|^\d{6}[-_]\d{7}$",
-    2: r"^\d{11}$|^\d{3}[-_]\d{4}[-_]\d{4}$",
-    3: r"^\d{10}$|^\d{12}$",
-    4: r"^[A-Z]{2}\d{9}[A-Z]{2}$",
-    5: r"^\d{10}$"
-}
 
 
 def get_delivery_info(invoice_number):
