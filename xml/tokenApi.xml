@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<db>
+  <user>your_username</user>
+  <password>your_password</password>
+  <host>your_host</host>
+  <database>your_database</database>
+</db>
