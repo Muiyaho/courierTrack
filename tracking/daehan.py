@@ -1,44 +1,63 @@
+import re
 import requests
 from bs4 import BeautifulSoup
 
-def get_daehan_tracking_details(tracking_number):
-    url = f"https://www.doortodoor.co.kr/parcel/doortodoor.do?fsp_action=PARC_ACT_002&fsp_cmd=retrieveInvNoACT&invc_no={tracking_number}"
+
+patterns = {
+    1: r"^\d{13}$|^\d{6}[-_]\d{7}$",
+    2: r"^\d{11}$|^\d{3}[-_]\d{4}[-_]\d{4}$",
+    3: r"^\d{10}$|^\d{12}$",
+    4: r"^[A-Z]{2}\d{9}[A-Z]{2}$",
+    5: r"^\d{10}$"
+}
+
+
+def get_delivery_info(invoice_number):
+    for post_id, pattern in patterns.items():
+        if re.match(pattern, invoice_number):
+            # 여기서 DB에서 해당 post_id에 해당하는 택배사 정보를 가져옵니다.
+            post_info = get_post_info_from_db(post_id)
+            # 그리고 post_info를 반환합니다.
+            return post_info
+    return None
+
+
+def get_post_info_from_db(post_id):
+    # 여기에 DB에서 post_id에 해당하는 택배사 정보를 가져오는 코드를 작성해주세요.
+    pass
+
+
+def get_tracking_info(invoice_number):
+    delivery_info = get_delivery_info(invoice_number)
+
+    if not delivery_info:
+        return None
+
+    url = delivery_info["url"]
+    soup_class = delivery_info["soup"]
+
     response = requests.get(url)
-
     if response.status_code != 200:
-        return False, None
+        return None
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    tracking_details = []
+    soup = BeautifulSoup(response.text, 'html.parser')
+    tracking_table = soup.find("table", {"class": soup_class})
 
-    #택배별 class name 알아야함!
-    tracking_table = soup.find("table", {"class": "ptb10 mb15"})
+    if tracking_table:
+        tracking_data = []
+        rows = tracking_table.find_all("tr")
 
-    if tracking_table is None:
-        return False, None
+        for row in rows:
+            cols = row.find_all("td")
+            cols = [col.text.strip() for col in cols]
+            tracking_data.append(cols)
 
-    for row in tracking_table.find_all("tr")[1:]:
-        cells = row.find_all("td")
-        tracking_status = cells[2].text.strip()
-        tracking_time = cells[0].text.strip() + " " + cells[1].text.strip()
-        tracking_location = cells[3].text.strip()
-
-        tracking_details.append({
-            "time": tracking_time,
-            "location": tracking_location,
-            "status": tracking_status
-        })
-
-    return True, tracking_details
-
-#테스트 전용 로직
-if __name__ == "__main__":
-    tracking_number = "0000000000"  # 실제 송장번호를 입력하세요.
-    is_valid, tracking_details = get_daehan_tracking_details(tracking_number)
-
-    if is_valid:
-        print("Tracking Details:")
-        for detail in tracking_details:
-            print(detail)
+        return tracking_data
     else:
-        print("Invalid tracking number or no tracking information found.")
+        return None
+
+
+# 예시 송장 번호로 테스트
+invoice_number = "1234567890123"
+tracking_info = get_tracking_info(invoice_number)
+print(tracking_info)
