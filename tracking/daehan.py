@@ -2,22 +2,16 @@ import re
 import requests
 from com.reg import patterns
 from bs4 import BeautifulSoup
+from db.db import get_post_info_from_db  # 함수를 여기서 임포트합니다.
 
 
 def get_delivery_info(invoice_number):
     for post_id, pattern in patterns.items():
         if re.match(pattern, invoice_number):
-            # 여기서 DB에서 해당 post_id에 해당하는 택배사 정보를 가져옵니다.
+            #운송장 패턴에 맞는 택배사 id로 조회
             post_info = get_post_info_from_db(post_id)
-            # 그리고 post_info를 반환합니다.
             return post_info
     return None
-
-
-def get_post_info_from_db(post_id):
-    # 여기에 DB에서 post_id에 해당하는 택배사 정보를 가져오는 코드를 작성해주세요.
-    pass
-
 
 def get_tracking_info(invoice_number):
     delivery_info = get_delivery_info(invoice_number)
