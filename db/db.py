@@ -1,16 +1,32 @@
+import os
 import mysql.connector
 
-def get_post_info_from_db(post_id,pattern):
+
+def read_query_from_file(query_file, query_name):
+    with open(query_file, 'r') as file:
+        content = file.read()
+
+    queries = content.split(";")
+    for query in queries:
+        if query.strip().startswith(f"[{query_name}]"):
+            return query.strip()[len(query_name) + 2:].strip()
+
+    raise ValueError(f"Query '{query_name}' not found in {query_file}")
+
+
+def get_post_info_from_db(post_id):
     # DB 연결 설정
     connection = mysql.connector.connect(
-        host="your_host",
-        user="your_user",
-        password="your_password",
-        database="your_database"
+        host=os.environ["DB_HOST"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        database=os.environ["DB_DATABASE"]
     )
 
+    query = read_query_from_file("queries.sql", "get_post_info")
+
     cursor = connection.cursor()
-    cursor.execute(f"SELECT name, url, soup FROM TEMP_TABLE WHERE id = {post_id}")
+    cursor.execute(query, (post_id,))
 
     row = cursor.fetchone()
 
